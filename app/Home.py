@@ -36,10 +36,16 @@ if f.empty:
 
 # ---------- KPI ----------
 of_f = f[f["genre"] == OF]
-span = min(10, max(1, (y1 - y0 + 1) // 2))  # 10 th terakhir vs 10 th sebelumnya
-recent = of_f[of_f["release_year"] > y1 - span].shape[0]
-prior = of_f[(of_f["release_year"] <= y1 - span) & (of_f["release_year"] > y1 - 2 * span)].shape[0]
-growth = (recent - prior) / prior * 100 if prior else None
+# Perbandingan era: rata-rata rilis OF per tahun sebelum vs sejak 2023 (Sailor bergabung dengan Ivy Echos).
+# Perbandingan "10 th terakhir" menyesatkan karena volume rilis seluruh genre menyusut setelah 2030.
+of_first = int(fr.loc[fr["genre"] == OF, "release_year"].min())
+pre_lo, pre_hi = max(y0, of_first), min(y1, 2022)
+era_lo, era_hi = max(y0, 2023), y1
+pre_n = of_f[of_f["release_year"].between(pre_lo, pre_hi)].shape[0]
+era_n = of_f[of_f["release_year"].between(era_lo, era_hi)].shape[0]
+pre_rate = pre_n / (pre_hi - pre_lo + 1) if pre_hi >= pre_lo else None
+era_rate = era_n / (era_hi - era_lo + 1) if era_hi >= era_lo else None
+growth = era_rate / pre_rate if pre_rate and era_rate is not None else None
 active = br[br["work_id"].isin(f["work_id"])]["artist_id"].nunique()
 top_genre = f["genre"].value_counts()
 
@@ -52,9 +58,11 @@ c[4].metric("Artis aktif", f"{active:,}".replace(",", "."))
 
 c = st.columns(5)
 c[0].metric("Karya Oceanus Folk", f"{len(of_f)}", f"{len(of_f) / len(f) * 100:.1f}% dari total", delta_color="off", delta_arrow="off")
-c[1].metric(f"Pertumbuhan OF {y1 - span + 1}–{y1}", f"{growth:+.0f}%" if growth is not None else "–",
-            f"{recent} vs {prior} karya ({y1 - 2 * span + 1}–{y1 - span})", delta_color="off", delta_arrow="off",
-            help="Setelah 2030 volume rilis seluruh genre turun drastis, sehingga perbandingan yang melewati 2030 cenderung negatif.")
+c[1].metric("Laju rilis OF sejak 2023", f"{growth:.1f}×" if growth is not None else "–",
+            f"{era_rate:.1f} vs {pre_rate:.1f} karya/tahun" if growth is not None else "rentang tahun tidak mencakup kedua era",
+            delta_color="off", delta_arrow="off",
+            help=f"Rata-rata rilis Oceanus Folk per tahun {era_lo}–{era_hi} dibanding {pre_lo}–{pre_hi} "
+                 "(sejak karya OF pertama). Perbandingan per era dipakai karena volume rilis semua genre menyusut setelah 2030.")
 ytn = f["years_to_notable"].dropna()
 c[2].metric("Jeda rilis → chart", f"{ytn.mean():.1f} th" if len(ytn) else "–",
             f"{(ytn == 0).mean() * 100:.0f}% di tahun yang sama" if len(ytn) else None, delta_color="off", delta_arrow="off")

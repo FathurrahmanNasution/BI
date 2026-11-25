@@ -138,10 +138,10 @@ for a in lvl1:
         G.add_node(a, kind="Dipengaruhi (langsung)")
     G.add_edge(SAILOR_ID, a, kind="Pengaruh")
 # pengaruh tidak langsung: lewat kolaborator dan lewat artis yang dipengaruhi langsung
-lvl2 = pd.DataFrame()
+seeds = set(cw.index) | lvl1
+lvl2 = inf[inf["tgt_artist"].isin(seeds) & ~inf["src_artist"].isin(seeds | {SAILOR_ID})]
+n_indirect = lvl2["src_artist"].nunique()   # selalu dihitung; grafik hanya menggambarnya di mode 2 langkah
 if hop == 2:
-    seeds = set(cw.index) | lvl1
-    lvl2 = inf[inf["tgt_artist"].isin(seeds) & ~inf["src_artist"].isin(seeds | {SAILOR_ID})]
     top2 = lvl2.groupby("src_artist").size().sort_values(ascending=False).head(60).index
     lvl2 = lvl2[lvl2["src_artist"].isin(top2)]
     for _, r in lvl2.drop_duplicates(["src_artist", "tgt_artist"]).iterrows():
@@ -179,7 +179,8 @@ st.plotly_chart(style(fig, 560), width="stretch")
 c = st.columns(3)
 c[0].metric("Kolaborator langsung", len(cw))
 c[1].metric("Dipengaruhi langsung", len(lvl1))
-c[2].metric("Dipengaruhi tidak langsung", lvl2["src_artist"].nunique() if hop == 2 else "pilih 2 langkah")
+c[2].metric("Dipengaruhi tidak langsung", n_indirect,
+            help="Artis yang meminjam dari kolaborator Sailor atau dari artis yang ia pengaruhi langsung. Pilih \"2 langkah\" untuk menggambarnya di grafik.")
 top_c = cw.sort_values(ascending=False).head(10).rename("karya bersama").rename_axis("artist_id").reset_index()
 top_c["artis"] = top_c["artist_id"].map(nm)
 top_c["genre dominan"] = top_c["artist_id"].map(A["dominant_genre"])
