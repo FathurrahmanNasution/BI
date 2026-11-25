@@ -83,10 +83,12 @@ def style(fig: go.Figure, height: int = 380, legend: bool = True) -> go.Figure:
 
 
 def add_era_lines(fig: go.Figure, y_ref: str = "paper") -> go.Figure:
-    for yr, label in ERA_MARKERS:
+    # Tiga penanda berdekatan (2023, 2026, 2028): label ditumpuk ke bawah agar tidak saling menimpa.
+    for i, (yr, label) in enumerate(ERA_MARKERS):
         fig.add_vline(x=yr, line_width=1, line_dash="dot", line_color="rgba(128,128,128,.7)")
-        fig.add_annotation(x=yr, y=1, yref="paper", text=label, showarrow=False,
-                           xanchor="left", yanchor="top", font=dict(size=11), opacity=.8)
+        fig.add_annotation(x=yr, y=1 - i * 0.075, yref="paper", text=f"{yr} · {label}", showarrow=False,
+                           xanchor="left", xshift=4, yanchor="top", font=dict(size=11), opacity=.85,
+                           bgcolor="rgba(255,255,255,.75)")
     return fig
 
 

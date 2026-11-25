@@ -150,7 +150,7 @@ if hop == 2:
         G.add_edge(r["tgt_artist"], r["src_artist"], kind="Pengaruh")
 
 pos = nx.spring_layout(G, seed=7, k=0.9 / max(1, len(G) ** 0.5))
-KIND_COLOR = {"Sailor Shift": SERIES[7], "Anggota Ivy Echos": SERIES[3], "Kolaborator": SERIES[0],
+KIND_COLOR = {"Sailor Shift": "#13293D", "Anggota Ivy Echos": SERIES[3], "Kolaborator": SERIES[0],
               "Dipengaruhi (langsung)": SERIES[1], "Dipengaruhi (tidak langsung)": SERIES[2]}
 fig = go.Figure()
 for kind, dash, color in [("Band", "solid", SERIES[3]), ("Kolaborasi", "solid", "rgba(128,128,128,.35)"),
