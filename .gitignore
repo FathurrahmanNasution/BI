@@ -1,0 +1,11 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Data hasil ETL (dibangun ulang otomatis saat app jalan)
+data/processed/
+
+# OS
+.DS_Store
+Thumbs.db
