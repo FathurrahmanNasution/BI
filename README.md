@@ -12,11 +12,15 @@ python -m venv .venv
 .venv/Scripts/streamlit run app/Home.py              # buka http://localhost:8501
 ```
 
+Folder `data/processed/` **tidak disimpan di repo** (ada di `.gitignore`) karena seluruh isinya dapat dibangun
+ulang dari `data/raw/MC1_graph.json` dalam sekitar 2 detik. Langkah ETL di atas opsional: bila folder itu belum ada,
+dashboard menjalankan ETL sendiri saat pertama kali dibuka (begitu juga di Streamlit Community Cloud).
+
 ## Struktur
 
 ```
 data/raw/MC1_graph.json          dataset asli
-data/processed/                  star schema + tabel metrik (parquet & csv), etl_log.json
+data/processed/                  (dibuat oleh ETL, tidak di repo) star schema, tabel metrik, etl_log.json
 etl/extract.py                   load JSON -> DataFrame node & edge
 etl/transform.py                 cleaning edge, dim_*, fact_*, bridge
 etl/metrics.py                   proyeksi pengaruh, kolaborasi, skor rising star, prediksi
@@ -41,8 +45,15 @@ IMPLEMENTATION_PLAN.md           rencana implementasi
 | `artist_year` | 75.739 | KPI per artis per tahun + skor rising star |
 | `rising_star_predictions` | 133 | kandidat bintang OF 2041–2045 |
 
-## Pembersihan data (lihat `data/processed/etl_log.json`)
-- 1 self-loop dan 3 edge duplikat dibuang; 103 edge `RecordedBy` yang terbalik (Label→Karya) dinormalisasi.
+## Pembersihan data
+Ringkasan di bawah juga ditulis ETL ke `data/processed/etl_log.json` setiap kali dijalankan:
+
+```json
+{"raw": 37857, "self_loops_removed": 1, "duplicates_removed": 3,
+ "recordedby_flipped": 103, "duplicates_after_flip": 0, "clean": 37853}
+```
+
+- 1 self-loop dan 3 edge duplikat dibuang; 103 edge `RecordedBy` yang terbalik (Label→Karya) dibalik menjadi Karya→Label (tidak dibuang), sehingga relasi bersih = 37.853.
 - 1.584 nama orang dipakai lebih dari satu orang (4.899 node Person), sehingga semua join memakai `id`. Nama tampilan ditambah `(#id)` bila ambigu.
 - `notable` bernilai True di 93% karya, jadi popularitas utama diukur dengan **masuk chart** (`notoriety_date` ada).
 
